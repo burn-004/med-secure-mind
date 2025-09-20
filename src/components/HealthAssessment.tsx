@@ -65,48 +65,129 @@ const HealthAssessment = () => {
   };
 
   const analyzeWithAI = async (data: AssessmentData): Promise<AssessmentResult> => {
-    // Enhanced symptom analysis with medical knowledge
+    // Enhanced symptom analysis with comprehensive medical knowledge
     const symptoms = data.symptoms.toLowerCase();
     const age = parseInt(data.age);
     
-    // Medical condition patterns
-    const conditionPatterns = {
-      'Respiratory': ['cough', 'breathing', 'chest pain', 'wheezing', 'shortness of breath'],
-      'Cardiovascular': ['chest pain', 'palpitations', 'dizziness', 'fatigue', 'swelling'],
-      'Gastrointestinal': ['nausea', 'vomiting', 'stomach pain', 'diarrhea', 'heartburn'],
-      'Neurological': ['headache', 'dizziness', 'confusion', 'memory loss', 'weakness'],
-      'Musculoskeletal': ['joint pain', 'back pain', 'muscle pain', 'stiffness', 'swelling'],
-      'Infectious': ['fever', 'chills', 'sweating', 'fatigue', 'body aches'],
-      'Endocrine': ['fatigue', 'weight loss', 'weight gain', 'excessive thirst', 'frequent urination']
+    // Comprehensive medical condition patterns with specific diseases
+    const specificDiseases = {
+      // Respiratory conditions
+      'Upper Respiratory Tract Infection': ['runny nose', 'sore throat', 'mild cough', 'congestion', 'sneezing'],
+      'Lower Respiratory Tract Infection/Pneumonia': ['deep cough', 'chest pain', 'difficulty breathing', 'fever', 'chills'],
+      'Asthma': ['wheezing', 'shortness of breath', 'tight chest', 'cough at night'],
+      'Bronchitis': ['persistent cough', 'mucus', 'chest discomfort', 'fatigue'],
+      
+      // Cardiovascular conditions
+      'Hypertension': ['headache', 'dizziness', 'chest pressure', 'fatigue', 'vision problems'],
+      'Angina/Heart Disease': ['chest pain', 'arm pain', 'jaw pain', 'shortness of breath', 'sweating'],
+      'Arrhythmia': ['palpitations', 'irregular heartbeat', 'dizziness', 'fainting', 'chest flutter'],
+      
+      // Gastrointestinal conditions
+      'Gastroenteritis': ['nausea', 'vomiting', 'diarrhea', 'stomach cramps', 'fever'],
+      'GERD/Acid Reflux': ['heartburn', 'acid taste', 'chest burning', 'difficulty swallowing'],
+      'Peptic Ulcer': ['stomach pain', 'burning sensation', 'bloating', 'nausea'],
+      'Appendicitis': ['right lower abdominal pain', 'nausea', 'vomiting', 'fever', 'loss of appetite'],
+      
+      // Neurological conditions  
+      'Migraine': ['severe headache', 'sensitivity to light', 'nausea', 'visual disturbances'],
+      'Tension Headache': ['head pressure', 'tight band feeling', 'neck pain', 'stress'],
+      'Stroke/TIA': ['sudden weakness', 'speech problems', 'vision loss', 'facial drooping', 'confusion'],
+      
+      // Musculoskeletal conditions
+      'Arthritis': ['joint pain', 'stiffness', 'swelling', 'limited range of motion'],
+      'Fibromyalgia': ['widespread pain', 'fatigue', 'sleep problems', 'tender points'],
+      'Lower Back Pain': ['back pain', 'stiffness', 'muscle spasms', 'leg pain'],
+      
+      // Infectious diseases
+      'Influenza': ['fever', 'body aches', 'chills', 'headache', 'cough', 'fatigue'],
+      'COVID-19': ['fever', 'dry cough', 'loss of taste', 'loss of smell', 'fatigue', 'breathing difficulty'],
+      'Urinary Tract Infection': ['burning urination', 'frequent urination', 'cloudy urine', 'pelvic pain'],
+      
+      // Endocrine conditions
+      'Diabetes': ['excessive thirst', 'frequent urination', 'fatigue', 'blurred vision', 'slow healing'],
+      'Thyroid Disorder': ['fatigue', 'weight changes', 'hair loss', 'mood changes', 'temperature sensitivity'],
+      
+      // Dermatological conditions
+      'Allergic Reaction': ['rash', 'itching', 'swelling', 'hives', 'difficulty breathing'],
+      'Eczema': ['dry skin', 'itching', 'redness', 'inflammation', 'scaling']
     };
 
     // Possible conditions based on symptoms
     const possibleConditions = [];
     let diseaseCategory = 'General';
+    let primaryMatch = '';
     
-    // Determine disease category
-    for (const [category, keywords] of Object.entries(conditionPatterns)) {
-      if (keywords.some(keyword => symptoms.includes(keyword))) {
-        diseaseCategory = category;
-        break;
+    // Advanced disease matching algorithm
+    let maxMatches = 0;
+    let bestMatches = [];
+    
+    for (const [disease, keywords] of Object.entries(specificDiseases)) {
+      const matches = keywords.filter(keyword => symptoms.includes(keyword)).length;
+      if (matches > 0) {
+        const matchPercentage = (matches / keywords.length) * 100;
+        if (matches > maxMatches || (matches === maxMatches && matchPercentage > 40)) {
+          if (matches > maxMatches) {
+            maxMatches = matches;
+            bestMatches = [{ disease, matches, percentage: matchPercentage }];
+          } else {
+            bestMatches.push({ disease, matches, percentage: matchPercentage });
+          }
+        }
       }
     }
-
-    // Specific condition analysis
-    if (symptoms.includes('chest pain') && symptoms.includes('breathing')) {
-      possibleConditions.push('Possible heart condition or lung issue');
+    
+    // Categorize based on best matches
+    if (bestMatches.length > 0) {
+      primaryMatch = bestMatches[0].disease;
+      
+      // Determine category based on primary match
+      if (primaryMatch.includes('Respiratory') || ['Upper Respiratory Tract Infection', 'Lower Respiratory Tract Infection/Pneumonia', 'Asthma', 'Bronchitis'].includes(primaryMatch)) {
+        diseaseCategory = 'Respiratory';
+      } else if (['Hypertension', 'Angina/Heart Disease', 'Arrhythmia'].includes(primaryMatch)) {
+        diseaseCategory = 'Cardiovascular';
+      } else if (['Gastroenteritis', 'GERD/Acid Reflux', 'Peptic Ulcer', 'Appendicitis'].includes(primaryMatch)) {
+        diseaseCategory = 'Gastrointestinal';
+      } else if (['Migraine', 'Tension Headache', 'Stroke/TIA'].includes(primaryMatch)) {
+        diseaseCategory = 'Neurological';
+      } else if (['Arthritis', 'Fibromyalgia', 'Lower Back Pain'].includes(primaryMatch)) {
+        diseaseCategory = 'Musculoskeletal';
+      } else if (['Influenza', 'COVID-19', 'Urinary Tract Infection'].includes(primaryMatch)) {
+        diseaseCategory = 'Infectious';
+      } else if (['Diabetes', 'Thyroid Disorder'].includes(primaryMatch)) {
+        diseaseCategory = 'Endocrine';
+      } else if (['Allergic Reaction', 'Eczema'].includes(primaryMatch)) {
+        diseaseCategory = 'Dermatological';
+      }
+      
+      // Add top matches as possible conditions
+      bestMatches.slice(0, 3).forEach(match => {
+        const confidence = match.percentage > 60 ? 'highly likely' : match.percentage > 40 ? 'possible' : 'potential';
+        possibleConditions.push(`Disease could be ${match.disease} (${confidence} - ${match.matches} matching symptoms)`);
+      });
     }
-    if (symptoms.includes('fever') && symptoms.includes('cough')) {
-      possibleConditions.push('Respiratory infection (cold, flu, or pneumonia)');
-    }
-    if (symptoms.includes('headache') && symptoms.includes('fever')) {
-      possibleConditions.push('Viral infection or migraine');
-    }
-    if (symptoms.includes('stomach pain') && symptoms.includes('nausea')) {
-      possibleConditions.push('Gastrointestinal issue (gastritis, food poisoning)');
-    }
-    if (symptoms.includes('joint pain') && symptoms.includes('stiffness')) {
-      possibleConditions.push('Arthritis or autoimmune condition');
+    
+    // Fallback specific condition analysis for common combinations
+    if (possibleConditions.length === 0) {
+      if (symptoms.includes('chest pain') && symptoms.includes('breathing')) {
+        possibleConditions.push('Disease could be Angina, Pneumonia, or Pulmonary Embolism (chest pain + breathing issues)');
+        diseaseCategory = 'Cardiovascular/Respiratory';
+      }
+      if (symptoms.includes('fever') && symptoms.includes('cough')) {
+        possibleConditions.push('Disease could be Influenza, COVID-19, or Pneumonia (fever + cough pattern)');
+        diseaseCategory = 'Infectious';
+      }
+      if (symptoms.includes('headache') && symptoms.includes('fever')) {
+        possibleConditions.push('Disease could be Meningitis, Sinusitis, or Viral Infection (headache + fever)');
+        diseaseCategory = 'Infectious/Neurological';
+      }
+      if (symptoms.includes('stomach pain') && symptoms.includes('nausea')) {
+        possibleConditions.push('Disease could be Gastroenteritis, Peptic Ulcer, or Gallbladder Disease (GI symptoms)');
+        diseaseCategory = 'Gastrointestinal';
+      }
+      if (symptoms.includes('joint pain') && symptoms.includes('stiffness')) {
+        possibleConditions.push('Disease could be Rheumatoid Arthritis, Osteoarthritis, or Lupus (joint involvement)');
+        diseaseCategory = 'Musculoskeletal';
+      }
     }
 
     // Risk scoring with AI-enhanced logic
